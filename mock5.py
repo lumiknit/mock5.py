@@ -14,6 +14,8 @@ Example:
   ./mock5.py
   # or
   ./mock5.py <board_height> <board_width>
+
+  # or read `example_of_Mock5` (at the bottom of mock5.py).
 """
 
 #-- Constants
@@ -539,7 +541,9 @@ class Mock5:
 
   # Play game
 
-  def play(self, input1=None, input2=None, random_first=True):
+  def play(self, input1=None, input2=None, random_first=True, \
+      print_intermediate_state=True, \
+      print_messages=True):
     """ Run a Game with Two Players
 
     Take two players and process game.
@@ -559,19 +563,22 @@ class Mock5:
         Otherwise, stone colors are randomly chosen.
         Even if the colors are exchanged (1p=white, 2p=black),
         it'll return 1 if 1p win and return 2 if 2p win.
+      print_intermediate_state (Bool):
+        Print every intermediate state f it's True
+      print_messages (Bool):
+        Print messages if it's True
 
     Returns:
       int: 1 if input1 win, 2 if input2 win, 0 if they draw
     """
-    # Input is a function take Mock5 and return row and column
-    # Example of input: User input
     def user_input(game):
       while True:
-        v = input("row-column (e.g. 3a) > ").strip()
+        v = input("row-col (e.g. 3a, 77) ; 'gg' ; 'undo' > ").strip()
         try:
           if v == 'gg': return False, 0
           elif v == 'undo': return False, 1
           v = [y for x in map(list, v.split()) for y in x]
+          if len(v) != 2: raise Exception()
           r = _digit_to_int(v[0])
           c = _digit_to_int(v[1])
           if (r is None) or (c is None): raise Exception()
@@ -592,25 +599,29 @@ class Mock5:
     pif = [None, input1, input2]
     winner = None
     while True:
-      print(str(self))
+      if print_intermediate_state:
+        print(str(self))
       r, c = pif[self.player](self)
-      if r is False:
+      if (r is None) or (r is False):
         if c == 1: self.undo()
         elif c == 0:
-          print("Player {} give up!".format(self.player))
+          if print_messages:
+            print("Player {} give up!".format(self.player))
           winner = 3 - self.player
           break
       else:
         if not self.place_stone(r, c):
-          print("Player {} cheats! (try to place stone at {}, {})" \
-              .format(self.player, r, c))
+          if print_messages:
+            print("Player {} cheats! (try to place stone at {}, {})" \
+                .format(self.player, r, c))
           winner = 3 - self.player
           break
       winner = self.check_win()
       if winner != None:
-        print(str(self))
-        if winner == 0: print("Draw!")
-        else: print("Player {} win!".format(winner))
+        if print_messages:
+          print(str(self))
+          if winner == 0: print("Draw!")
+          else: print("Player {} win!".format(winner))
         break
     if (winner is not None) and winner > 0 and exchanged:
       winner = 3 - winner
@@ -852,3 +863,99 @@ if __name__ == "__main__":
   else:
     g = Mock5()
   g.play()
+
+#-- Example
+
+def example_of_Mock5():
+  """ Example of Mock5 Usage
+  """
+  # Create default size board.
+  game_1 = Mock5()
+  # You can make your preferring size board.
+  game_2 = Mock5(19, 19)
+  # The first turn is for a black stone!
+  # Place a stone at row=3, column=4
+  game_2.place_stone(3, 4) # BLACK
+  # Then, next turn is for a white tone!
+  # Place a stone at row=6, column=2
+  game_2.place_stone(6, 2) # WHITE
+  # Note that every index is 0-based!
+  # The first row is 0-th and the first column is 0-th too.
+  game_2.place_stone(0, 0) # BLACK
+  # `str` is useful to see the current state of game.
+  pp = str(game_2)
+  print(pp)
+  # or, just `print(game_2)`
+  # You cannot place stone over stone!
+  # If you try it, `.place_stone` will do nothing and return False
+  if not game_2.place_stone(3, 4):
+    print("There was a stone at (3, 4)! You can't place a stone there.")
+  # If you just want to check you can place a stone at some cell,
+  # use `.can_place_at`
+  print("Can place at (3, 4)? {}".format(game_2.can_place_at(3, 4)))
+  print("Can place at (2, 10)? {}".format(game_2.can_place_at(2, 10)))
+  # Mock5 manages history. You can undo.
+  print("# Before UNDO:")
+  print(game_2)
+  l = game_2.undo()
+  print("# {} histories left".format(l))
+  print("# After UNDO:")
+  print(game_2)
+  # To find the game is finished (i.e. there is 5 stones in a row)
+  # use `.check_win`!
+  print("Win? {}".format(game_2.check_win()))
+  # => None, it means game is not finished yet.
+  game_2.place_stone(1, 10) # Player 2 = WHITE
+  game_2.place_stone(1, 11) # Player 1 = BLACK
+  game_2.place_stone(2, 10)
+  game_2.place_stone(2, 11)
+  game_2.place_stone(3, 10)
+  game_2.place_stone(3, 11)
+  game_2.place_stone(4, 10)
+  game_2.place_stone(4, 11)
+  game_2.place_stone(5, 10)
+  print(game_2)
+  print("Win? {}".format(game_2.check_win()))
+  # => 2, it means the player 2 wins.
+  game_3 = Mock5(3, 3)
+  for i in range(9): game_3.place_stone_at_index(i) # Fill out board!
+  print(game_3)
+  print("Win? {}".format(game_3.check_win()))
+  # => 0, it means there are no 5-in-a-row, and no empty cell.
+  # Since nobody can place a stone, they draw.
+
+  # If you make a loop and repeat 
+  # - calculate next stone position checking place-ability
+  # - place a stone
+  # - check there is a winner, and choose halt or not
+  # you have an Omok game!
+  # However, this is too inconvinient.
+  # In this case, you can use `.play`.
+  # First, make an agent, which take a board, and give the position of
+  # next stone.
+  def stupid_player(game):
+    # Find first empty
+    for r in range(game.height): # Each row
+      for c in range(game.width): # Each column
+        if game[r, c] == 0: # Check empty
+          return (r, c) # Return row, column
+    return None # You can't do anything
+  # Then, play with 2 of them
+  winner = Mock5(4, 4).play(stupid_player, stupid_player)
+  # winner is 0, 1, or 2. 0 implies draw, others implies the index of winner.
+  # After machine learning process, you will want to test your agent.
+  # Then make a wrapper such as:
+  def model_wrapper(model):
+    def player(game):
+      i = torch.argmax(model(game.tensor()))
+      return game._expand_index(i)
+    return player 
+  # And put `model_wrapper(model)` to `.play` method.
+  # Also, if you do not specify player, you must play with STDIN.
+
+  # You can take numpy.array or torch.tensor from Mock5.
+  # game.numpy()
+  # game.tensor()
+  # game.empty_numpy()
+  # game.empty_tensor()
+  # More details in docstring of those method.
