@@ -18,6 +18,9 @@ Example:
   # or read `example_of_Mock5` (at the bottom of mock5.py).
 """
 
+__all__ = ['Mock5']
+__version__ = '0.0.1'
+
 #-- Constants
 
 # Stone color

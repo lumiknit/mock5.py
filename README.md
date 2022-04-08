@@ -7,7 +7,7 @@ Simple omok (five-in-a-row) game in python, to be used with numpy/torch.
 You can excute it by
 
 ```
-python mock5.py [<BOARD_HEIGHT> <BOARD_WIDTH>]
+python mock5/__init__.py [<BOARD_HEIGHT> <BOARD_WIDTH>]
 ```
 
 in your shell to play alone,
