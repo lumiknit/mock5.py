@@ -2,21 +2,18 @@
 # -*- coding: utf-8 -*-
 """mock5
 
+Author: lumiknit (aasr4r4@gmail.com)
+
 Simple Omok (five-in-a-row) game for RL with numpy/torch.
 
 The main part of this module is the class `Mock5`.
-See `Mock5`
-
-Author: lumiknit (aasr4r4@gmail.com)
+See `help(Mock5)`
 
 Example:
   # For playing game with to user, run this script such as:
   ./mock5.py
   # or
   ./mock5.py <board_height> <board_width>
-
-Todo:
-  * Fill up Mock5Analysis
 """
 
 #-- Constants
@@ -261,6 +258,111 @@ class Mock5:
     new_history = list(map(flip_idx, self.history))
     return self.__class__(self.height, self.width, history=new_history)
 
+  #-- Index Iterator
+
+  class _IndexIter:
+    """ Index Iterator
+    
+    Iterate from (sr, sc) increasing by (dr, dc).
+    It returns (row, column)
+
+    IT MAY OCCUR INF LOOP. DO NOT USE THIS.
+    """
+    def __init__(self, game, sr, sc, dr, dc):
+      if dr == 0 and dc == 0: raise ValueError
+      self.game = game
+      self.r = sr
+      self.c = sc
+      self.dr = dr
+      self.dc = dc
+      if dr >= 0: self.br = self.game.height
+      else: self.br = -1
+      if dc >= 0: self.bc = self.game.width
+      else: self.bc = -1
+
+    def __iter__(self): return self
+
+    def __next__(self):
+      if self.r == self.br or self.c == self.bc:
+        raise StopIteration
+      else:
+        ret = (self.r, self.c)
+        self.r += self.dr
+        self.c += self.dc
+        return ret
+
+  def iter_row(self, idx):
+    """ Index iterator for idx-th row
+    
+    Iterator each elements in idx-th row
+    """
+    if idx < 0 or idx >= self.height: raise IndexError
+    return self._IndexIter(self, idx, 0, 0, 1)
+
+  def iter_column(self, idx):
+    """ Index iterator for idx-th column
+    
+    Iterator each element in idx-th column
+    """
+    if idx < 0 or idx >= self.width: raise IndexError
+    return self._IndexIter(self, 0, idx, 1, 0)
+
+  def iter_right_down(self, idx):
+    """ Index itererator right down diagonal
+    
+    Iterator each element following right down direction.
+    Both of row and column increasing
+    """
+    r, c = 0, 0
+    if idx < 0: raise IndexError
+    elif idx < self.height: r = self.height - idx - 1
+    elif idx < self.width + self.height - 1: c = idx - self.height + 1
+    else: raise IndexError
+    return self._IndexIter(self, r, c, 1, 1)
+
+  def iter_left_down(self, idx):
+    """ Index itererator rleft down diagonal
+    
+    Iterator each element following left down direction.
+    Column decreases while row increasing
+    """
+    r, c = 0, self.width - 1
+    if idx < 0: raise IndexError
+    elif idx < self.width: c = idx
+    elif idx < self.width + self.height - 1: r = idx - self.width + 1
+    else: raise IndexError
+    return self._IndexIter(self, r, c, 1, -1)
+
+  #-- Slice
+
+  def slice_row(self, idx):
+    """ Extrat row
+    
+    Make a idx-th row slice of board
+    """
+    return [self[r, c] for r, c in self.iter_row(idx)]
+
+  def slice_column(self, idx):
+    """ Extrat column
+    
+    Make a idx-th column slice of board
+    """
+    return [self[r, c] for r, c in self.iter_column(idx)]
+
+  def slice_right_down(self, idx):
+    """ Extrat right down diagonal
+    
+    Make a idx-th slice of board in right down direciton
+    """
+    return [self[r, c] for r, c in self.iter_right_down(idx)]
+  
+  def slice_left_down(self, idx):
+    """ Extrat left down diagonal
+    
+    Make a idx-th slice of board in left down direciton
+    """
+    return [self[r, c] for r, c in self.iter_left_down(idx)]
+
   # Placing stone methods
 
   def can_place_at(self, r, c, player = None):
@@ -356,6 +458,19 @@ class Mock5:
 
   # Check game finished
 
+  def _scan_with_iter(self, iter):
+    """ Check 5 in a row in the direction of iter
+    
+    Return color if there are 5 stones of same colors.
+    """
+    cnt = 1
+    p = self[iter.__next__()]
+    for r, c in iter:
+      cnt = cnt + 1 if self[r, c] == p else 1
+      p = self[r, c]
+      if cnt >= 5 and p > 0: return p
+    return None
+
   def check_win(self):
     """ Check the Game is Finished
 
@@ -372,49 +487,22 @@ class Mock5:
         1 | 2 if the player 1 or 2 wins
         0 if they draw
     """
-    # If there is 5 in a row, return a winner index (1 or 2)
-    # If they draw, return 0
-    # Otherwise, return None
-
     # Scan in 4 directions
     # Hori
-    for r in range(self.height):
-      cnt = 1
-      for c in range(1, self.width):
-        cnt = cnt + 1 if self[r, c] == self[r, c - 1] else 1
-        if cnt >= 5 and self[r, c] > 0: return self[r, c]
+    for x in range(self.height):
+      if (v := self._scan_with_iter(self.iter_row(x))) is not None:
+        return v
     # Vert
-    for c in range(self.width):
-      cnt = 1
-      for r in range(1, self.height):
-        cnt = cnt + 1 if self[r - 1, c] == self[r, c] else 1
-        if cnt >= 5 and self[r, c] > 0: return self[r, c]
-    # RightBottom Diagonal
-    for d in range(self.width + self.height - 1):
-      r, c = 0, 0
-      if d < self.width: r, c = self.height - 1, d
-      else: r, c = self.height - 1 - (d - self.width + 1), self.width - 1
-      off, cnt = 1, 1
-      while r - off >= 0 and c - off >= 0:
-        cnt = cnt + 1 \
-            if self[r - (off - 1), c - (off - 1)] == self[r - off, c - off] \
-            else 1
-        if cnt >= 5 and self[r - off, c - off] > 0:
-          return self[r - off, c - off]
-        off += 1
-    # LeftBottom Diagonal
-    for d in range(self.width + self.height - 1):
-      r, c = 0, 0
-      if d < self.height: r, c = d, 0
-      else: r, c = self.height - 1, d - (self.height - 1)
-      off, cnt = 1, 1
-      while r - off >= 0 and c + off < self.width:
-        cnt = cnt + 1 \
-            if self[r - (off - 1), c + (off - 1)] == self[r - off, c + off] \
-            else 1
-        if cnt >= 5 and self[r - off, c + off] > 0:
-          return self[r - off, c + off]
-        off += 1
+    for x in range(self.width):
+      if (v := self._scan_with_iter(self.iter_column(x))) is not None:
+        return v
+    # Diagonal
+    for x in range(self.height + self.width - 1):
+      if (v := self._scan_with_iter(self.iter_right_down(x))) is not None:
+        return v
+      if (v := self._scan_with_iter(self.iter_left_down(x))) is not None:
+        return v
+    # Check draw
     if len(self.history) >= self.width * self.height:
       # Draw
       return 0
@@ -494,7 +582,7 @@ class Mock5:
       if winner != None:
         print(str(self))
         if winner == 0: print("Draw!")
-        else: print("Player {} win!".format(w))
+        else: print("Player {} win!".format(winner))
         break
     if (winner is not None) and winner > 0 and exchanged:
       winner = 3 - winner
@@ -641,23 +729,6 @@ class Mock5:
       if rank == 2:
         n = n.view(self.width, self.height)
       return n
-
-#-- Analysis class
-
-class Mock5Analysis:
-  """ Omok Anlyzer
-
-  It takes a game board Mock5 and anlayze the state:
-  - (TODO) (semi-)opend 4 connections
-  - (TODO) 3-3, 3-4, 4-4 after one move
-  """
-
-  def __init__(self, game):
-    if type(game) is not Mock5: raise TypeError
-    self.game = game
-    self.run_analysis()
-
-  def run_analysis(): pass
 
 #-- Entrypoint
 
