@@ -14,6 +14,7 @@ Example:
   ./play.py random        # play with agent-random
   ./play.py 11 12         # play in 11x12 board
   ./play.py silly 14 14   # play in 14x14 board with agent-silly
+  ./play.py silly random 14 14   # watch a game silly vs random
 """
 
 from mock5 import Mock5
@@ -37,7 +38,11 @@ if __name__ == "__main__":
     h = int(sys.argv[1])
     w = int(sys.argv[2])
     Mock5(h, w).play()
-  else:
+  elif l == 4:
     h = int(sys.argv[2])
     w = int(sys.argv[3])
-    Mock5().play(agents[sys.argv[1]])
+    Mock5(h, w).play(agents[sys.argv[1]])
+  elif l == 5:
+    h = int(sys.argv[3])
+    w = int(sys.argv[4])
+    Mock5(h, w).play(agents[sys.argv[1]], agents[sys.argv[2]])

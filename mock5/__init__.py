@@ -523,17 +523,21 @@ class Mock5:
     # Scan in 4 directions
     # Hori
     for x in range(self.height):
-      if (v := self._scan_with_iter(self.iter_row(x))) is not None:
+      v = self._scan_with_iter(self.iter_row(x))
+      if v is not None:
         return v
     # Vert
     for x in range(self.width):
-      if (v := self._scan_with_iter(self.iter_column(x))) is not None:
+      v = self._scan_with_iter(self.iter_column(x))
+      if v is not None:
         return v
     # Diagonal
     for x in range(self.height + self.width - 1):
-      if (v := self._scan_with_iter(self.iter_right_down(x))) is not None:
+      v = self._scan_with_iter(self.iter_right_down(x))
+      if v is not None:
         return v
-      if (v := self._scan_with_iter(self.iter_left_down(x))) is not None:
+      v = self._scan_with_iter(self.iter_left_down(x))
+      if v is not None:
         return v
     # Check draw
     if len(self.history) >= self.width * self.height:

@@ -8,6 +8,8 @@ You can excute it by
 
 ```
 python play.py [<AGENT>] [<BOARD_HEIGHT> <BOARD_WIDTH>]
+# or 
+python play.py <AGENT1> <AGENT2> <BOARD_HEIGHT> <BOARD_WIDTH>
 ```
 
 in your shell.
