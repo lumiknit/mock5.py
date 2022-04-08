@@ -64,9 +64,13 @@ class Mock5:
   * Pretty print (__str__)
   * Provide indexing by row-column (__getitem__, __setitem__)
   * Duplicate and rotate/flip a board (duplicate, replay, rotate_ccw, etc.)
+  * Make an iterater of indices (iter_row/column/right_down/left_down)
+  * Get first (row,col) of iterator (first_of_row/column/right_down/left_down)
+  * Extract a line of board (slice_row/column/right_down/left_down)
   * "Action" i.e. placing a stone (can_place_at, place_stone)
-  * History for backtrack
+  * History for backtrack (undo)
   * Simple analysis to check game is finished (check_win)
+  * Generate empty-or-not array (empty_array, empty_numpy, empty_tensor)
   * And, convert board into numpy.array and torch.tensor (numpy, tensor)
 
   Note that each cells of `board` contains 0 (empty), 1 (black) or 2 (white).
@@ -616,47 +620,47 @@ class Mock5:
 
   def _map_for_player(self, player=None):
     """
-      Return m such that
-        m = [0, 1, 2] if player = 1
-        m = [0, 2, 1] if player = 2
-      If m is mapped to board, the meaning of each cell value is changed:
-        0 means empty
-        1 means given player's stone
-        2 means opponent's stone
+    Return m such that
+      m = [0, 1, 2] if player = 1
+      m = [0, 2, 1] if player = 2
+    If m is mapped to board, the meaning of each cell value is changed:
+      0 means empty
+      1 means given player's stone
+      2 means opponent's stone
     """
     if player == None: player = self.player
     return [0, player, 3 - player]
 
   def board_for(self, player=None):
     """
-      Make a copy of board, which contains given player's stones as 1
-      and opponent's stones as 2
+    Make a copy of board, which contains given player's stones as 1
+    and opponent's stones as 2
 
-      Args:
-        player (int?):
-          1 or 2 to specify player.
-          Default value is current player.
+    Args:
+      player (int?):
+        1 or 2 to specify player.
+        Default value is current player.
 
-      Returns:
-        int[height * width]: Copy of board
+    Returns:
+      int[height * width]: Copy of board
     """
     m = self._map_for_player(player)
     return [m[x] for x in self.board]
 
   def one_hot_encoding(self, player=None):
     """
-      Make an one hot encoding version of board.
-      return[0] is marked by 1 iff the cell is empty,
-      return[1] is marked by 1 iff there is the given player's stone
-      return[2] is marked by 1 iff there is the opponent's stone
+    Make an one hot encoding version of board.
+    return[0] is marked by 1 iff the cell is empty,
+    return[1] is marked by 1 iff there is the given player's stone
+    return[2] is marked by 1 iff there is the opponent's stone
 
-      Args:
-        player (int?):
-          1 or 2 to specify player.
-          Default value is current player.
+    Args:
+      player (int?):
+        1 or 2 to specify player.
+        Default value is current player.
 
-      Returns:
-        int[3][height * width]: One hot encoding version board
+    Returns:
+      int[3][height * width]: One hot encoding version board
     """
     m = self._map_for_player(player)
     a = [[0] * (self.height * self.width) for _ in range(3)]
@@ -667,29 +671,29 @@ class Mock5:
   def numpy(self, player=None, one_hot_encoding=True, rank=None, dtype=None):
     """ numpy.array Conversion
 
-      Convert self into numpy.array.
-      Note that value/index 1 means the given player's stone.
+    Convert self into numpy.array.
+    Note that value/index 1 means the given player's stone.
 
-      Args:
-        player (int?):
-          1 or 2 to specify player.
-          Default value is current player.
-        one_hot_encoding (bool):
-          Make one hot encoding version if True,
-          otherwise, make array filled with 0, 1, 2
-          Default value is True
-        rank (int): Rank of result array. See Returns.
-        dtype (numpy.dtype):
-          Element type of result array.
-          Default value is numpy.float
+    Args:
+      player (int?):
+        1 or 2 to specify player.
+        Default value is current player.
+      one_hot_encoding (bool):
+        Make one hot encoding version if True,
+        otherwise, make array filled with 0, 1, 2
+        Default value is True
+      rank (int): Rank of result array. See Returns.
+      dtype (numpy.dtype):
+        Element type of result array.
+        Default value is numpy.float
 
-      Returns:
-        numpy.array(dtype=dtype): There are 5 variations of rank/dim
-          one_hot_encoding & rank=3 => [3][height][width]   (default)
-          one_hot_encoding & rank=2 => [3][height * width]
-          one_hot_encoding & rank=1 => [3 * height * width]
-          !one_hot_encoding & rank=2 => [height][width]
-          !one_hot_encoding & rank=1 => [height * width]    (default)
+    Returns:
+      numpy.array(dtype=dtype): There are 5 variations of rank/dim
+        one_hot_encoding & rank=3 => [3][height][width]   (default)
+        one_hot_encoding & rank=2 => [3][height * width]
+        one_hot_encoding & rank=1 => [3 * height * width]
+        !one_hot_encoding & rank=2 => [height][width]
+        !one_hot_encoding & rank=1 => [height * width]    (default)
     """
     import numpy as np
     if dtype is None: dtype = np.float
@@ -712,29 +716,32 @@ class Mock5:
   def tensor(self, player=None, one_hot_encoding=True, rank=None, dtype=None):
     """ torch.tensor conversion
 
-      Convert self into torch.tensor.
-      Note that value/index 1 means the given player's stone.
+    Convert self into torch.tensor.
+    Note that value/index 1 means the given player's stone.
 
-      Args:
-        player (int?):
-          1 or 2 to specify player.
-          Default value is current player.
-        one_hot_encoding (bool):
-          Make one hot encoding version if True,
-          otherwise, make array filled with 0, 1, 2
-          Default value is True
-        rank (int): Rank of result tensor. See Returns.
-        dtype (numpy.dtype):
-          Element type of result tensor.
-          Default value is torch.float
+    Note:
+      This method may return a VIEW of tensor (when it's reshaped)
 
-      Returns:
-        torch.tensor(dtype=dtype): There are 5 variations of rank/dim
-          one_hot_encoding & rank=3 => [3][height][width]   (default)
-          one_hot_encoding & rank=2 => [3][height * width]
-          one_hot_encoding & rank=1 => [3 * height * width]
-          !one_hot_encoding & rank=2 => [height][width]
-          !one_hot_encoding & rank=1 => [height * width]    (default)
+    Args:
+      player (int?):
+        1 or 2 to specify player.
+        Default value is current player.
+      one_hot_encoding (bool):
+        Make one hot encoding version if True,
+        otherwise, make array filled with 0, 1, 2
+        Default value is True
+      rank (int): Rank of result tensor. See Returns.
+      dtype (torch.dtype):
+        Element type of result tensor.
+        Default value is torch.float
+
+    Returns:
+      torch.tensor(dtype=dtype): There are 5 variations of rank/dim
+        one_hot_encoding & rank=3 => [3][height][width]   (default)
+        one_hot_encoding & rank=2 => [3][height * width]
+        one_hot_encoding & rank=1 => [3 * height * width]
+        !one_hot_encoding & rank=2 => [height][width]
+        !one_hot_encoding & rank=1 => [height * width]    (default)
     """
     import torch
     if dtype is None: dtype = torch.float
@@ -753,6 +760,85 @@ class Mock5:
       if rank == 2:
         n = n.view(self.width, self.height)
       return n
+
+  # Empty-or-not array
+
+  def empty_array(self, empty=True, non_empty=False):
+    """ Empty cell array
+
+    Make an array, where each cell denote whether the board is empty or not.
+    Default, array will be filled with True(empty)/False(non-empty)
+
+    Args:
+      empty (Any): Value to denote that cell is empty
+      non_empty (Any): Value to denote that cell is not empty
+
+    Returns:
+      type(empty)[height * width]:
+        [idx] equals to empty iff board[idx] == 0 (empty)
+    """
+    m = [empty, non_empty, non_empty]
+    return [m[self.board[idx]] for idx in range(self.height * self.width)]
+
+  def empty_numpy(self, rank=1, empty=1., non_empty=0., dtype=None):
+    """ Numpy array of empty
+
+    Make a numpy array,
+    where each cell denote whether the board is empty or not.
+    Default, array will be filled with 1.0(empty)/0.0(non-empty)
+
+    Args:
+      rank (1|2): See Returns
+      empty (Any): Value to denote that cell is empty
+      non_empty (Any): Value to denote that cell is not empty
+      dtype (numpy.dtype?):
+        dtype of numpy.array.
+        In default, it follows the type of empty
+
+    Returns:
+      numpy.array(dtype=dtype): There are 2 variations of rank
+        rank=1 => [height * width]   (default)
+        rank=2 => [height][width]
+    """
+    import numpy as np
+    if dtype is None: dtype = type(empty)
+    em = self.empty_array(empty, non_empty)
+    arr = np.array(em, dtype=dtype)
+    if rank == 2:
+      return arr.reshape(self.height, self.width)
+    else:
+      return arr
+
+  def empty_tensor(self, rank=1, empty=True, non_empty=False, dtype=None):
+    """ Torch tensor of empty
+
+    Make a torch tensor,
+    where each cell denote whether the board is empty or not.
+    Default, array will be filled with True(empty)/False(non-empty)
+
+    Note:
+      This method may return a VIEW of tensor (when it's reshaped)
+
+    Args:
+      rank (1|2): See Returns
+      empty (Any): Value to denote that cell is empty
+      non_empty (Any): Value to denote that cell is not empty
+      dtype (torch.dtype?):
+        dtype of torch.tensor
+        In default, it follows the type of empty
+
+    Returns:
+      torch.tensor(dtype=dtype): There are 2 variations of rank
+        rank=1 => [height * width]   (default)
+        rank=2 => [height][width]
+    """
+    import torch
+    if dtype is None: dtype = type(empty)
+    em = self.empty_array(empty, non_empty)
+    tensor = torch.tensor(em, dtype=dtype)
+    if rank == 2:
+      return tensor.view(self.height, self.width)
+    return tensor
 
 #-- Entrypoint
 
