@@ -13,6 +13,7 @@ Use `agent` function.
 from mock5.analysis import *
 
 def agent(game):
+  import math
   import random
 
   a = Analysis(game)
@@ -30,9 +31,9 @@ def agent(game):
     dr = r - game.height / 2
     dc = c - game.width / 2
     # Center is preffered
-    score[i] -= ((dr * dr) + (dc * dc)) * 12
+    score[i] -= math.sqrt((dr * dr) + (dc * dc))
     # Make some noise for random choice
-    score[i] += random.random() * 12
+    score[i] += random.random()
     for dir in range(4):
       m = a.get_critical_at(my, dir, i)
       o = a.get_critical_at(op, dir, i)

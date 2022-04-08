@@ -856,19 +856,6 @@ class Mock5:
       return tensor.view(self.height, self.width)
     return tensor
 
-#-- Entrypoint
-
-if __name__ == "__main__":
-  import sys
-  g = None
-  if len(sys.argv) == 3:
-    h = int(sys.argv[1])
-    w = int(sys.argv[2])
-    g = Mock5(h, w)
-  else:
-    g = Mock5()
-  g.play()
-
 #-- Example
 
 def example_of_Mock5():
