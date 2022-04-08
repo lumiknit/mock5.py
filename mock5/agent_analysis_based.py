@@ -43,3 +43,5 @@ def agent(game):
       max_i = i
   if max_i is None: return None
   return game._expand_index(max_i)
+
+agent.name = "agent-analysis-based"

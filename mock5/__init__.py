@@ -596,6 +596,7 @@ class Mock5:
         except Exception:
           print("Wrong input!")
         finally: pass
+    user_input.name = "user"
     import random
     exchanged = False
     if random_first and random.random() < 0.5:
@@ -604,6 +605,10 @@ class Mock5:
     if input1 is None: input1 = user_input
     if input2 is None: input2 = user_input
     pif = [None, input1, input2]
+    def player_name(idx):
+      if hasattr(pif[idx], "name"):
+        return "{}p ({})".format(idx, pif[idx].name)
+      else: return "{}p ({})".format(idx, pif[idx])
     winner = None
     while True:
       if print_intermediate_state:
@@ -615,14 +620,14 @@ class Mock5:
         if c == 1: self.undo()
         elif c == 0:
           if print_messages:
-            print("Player {} give up!".format(self.player))
+            print("{} give up!".format(player_name(self.player)))
           winner = 3 - self.player
           break
       else:
         if not self.place_stone(r, c):
           if print_messages:
-            print("Player {} cheats! (try to place stone at {}, {})" \
-                .format(self.player, r, c))
+            print("{} cheats! (try to place stone at {}, {})" \
+                .format(player_name(self.player), r, c))
           winner = 3 - self.player
           break
       winner = self.check_win()
@@ -630,7 +635,7 @@ class Mock5:
         if print_messages:
           print(str(self))
           if winner == 0: print("Draw!")
-          else: print("Player {} win!".format(winner))
+          else: print("{} win!".format(player_name(winner)))
         break
     if (winner is not None) and winner > 0 and exchanged:
       winner = 3 - winner

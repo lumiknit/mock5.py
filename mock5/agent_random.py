@@ -18,3 +18,5 @@ def agent(game):
     r, c = game._expand_index(rdx)
     if game.can_place_at(r, c):
       return (r, c)
+
+agent.name = "agent-random"
