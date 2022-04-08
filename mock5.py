@@ -291,21 +291,53 @@ class Mock5:
         self.c += self.dc
         return ret
 
+  def first_of_row(self, idx):
+    """ First element's (row, colun) of idx-th row
+    """
+    if idx < 0 or idx >= self.height: raise IndexError
+    return (idx, 0)
+
+  def first_of_column(self, idx):
+    """ First element's (row, colun) of idx-th column
+    """
+    if idx < 0 or idx >= self.width: raise IndexError
+    return (0, idx)
+
+  def first_of_right_down(self, idx):
+    """ First element's (row, colun) of idx-th right-down diagonal
+    """
+    r, c = 0, 0
+    if idx < 0: raise IndexError
+    elif idx < self.height: r = self.height - idx - 1
+    elif idx < self.width + self.height - 1: c = idx - self.height + 1
+    else: raise IndexError
+    return (r, c)
+
+  def first_of_left_down(self, idx):
+    """ First element's (row, colun) of idx-th left-down diagonal
+    """
+    r, c = 0, self.width - 1
+    if idx < 0: raise IndexError
+    elif idx < self.width: c = idx
+    elif idx < self.width + self.height - 1: r = idx - self.width + 1
+    else: raise IndexError
+    return (r, c)
+
   def iter_row(self, idx):
     """ Index iterator for idx-th row
     
     Iterator each elements in idx-th row
     """
-    if idx < 0 or idx >= self.height: raise IndexError
-    return self._IndexIter(self, idx, 0, 0, 1)
+    r, c = self.first_of_row(idx)
+    return self._IndexIter(self, r, c, 0, 1)
 
   def iter_column(self, idx):
     """ Index iterator for idx-th column
     
     Iterator each element in idx-th column
     """
-    if idx < 0 or idx >= self.width: raise IndexError
-    return self._IndexIter(self, 0, idx, 1, 0)
+    r, c = self.first_of_column(idx)
+    return self._IndexIter(self, r, c, 1, 0)
 
   def iter_right_down(self, idx):
     """ Index itererator right down diagonal
@@ -313,11 +345,7 @@ class Mock5:
     Iterator each element following right down direction.
     Both of row and column increasing
     """
-    r, c = 0, 0
-    if idx < 0: raise IndexError
-    elif idx < self.height: r = self.height - idx - 1
-    elif idx < self.width + self.height - 1: c = idx - self.height + 1
-    else: raise IndexError
+    r, c = self.first_of_right_down(idx)
     return self._IndexIter(self, r, c, 1, 1)
 
   def iter_left_down(self, idx):
@@ -326,11 +354,7 @@ class Mock5:
     Iterator each element following left down direction.
     Column decreases while row increasing
     """
-    r, c = 0, self.width - 1
-    if idx < 0: raise IndexError
-    elif idx < self.width: c = idx
-    elif idx < self.width + self.height - 1: r = idx - self.width + 1
-    else: raise IndexError
+    r, c = self.first_of_left_down(idx)
     return self._IndexIter(self, r, c, 1, -1)
 
   #-- Slice
