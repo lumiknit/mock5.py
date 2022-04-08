@@ -604,7 +604,9 @@ class Mock5:
     while True:
       if print_intermediate_state:
         print(str(self))
-      r, c = pif[self.player](self)
+      ret = pif[self.player](self)
+      if ret is None: r, c = False, 0
+      else: r, c = ret
       if (r is None) or (r is False):
         if c == 1: self.undo()
         elif c == 0:
