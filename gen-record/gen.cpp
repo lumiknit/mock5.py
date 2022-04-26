@@ -114,7 +114,7 @@ void printState(State *S) {
   }
   */
   char buf[24];
-  fgets(buf, 24, stdin);
+  int z = fgets(buf, 24, stdin);
 }
 
 int getNext(State *S) {
@@ -401,7 +401,7 @@ int main(int argc, char **argv) {
   f = fopen(argv[1], "w");
   if(f == NULL) {
     fprintf(stderr, "Cannot open file %s\n", argv[1]);
-    return NULL;
+    return 1;
   }
 
 #pragma omp parallel for num_threads(8)
