@@ -129,7 +129,7 @@ int getNext(State *S) {
   int fl = 0;
   int off = rand() % H * W;
   for(int k = 0; k < H * W; k++) {
-    int i = (off + k) % H * W;
+    int i = (off + k) % (H * W);
     if(S->bd[i] == 0) {
       float score = 0;
       if(S->n <= 2) score -= dist(i) * 10;

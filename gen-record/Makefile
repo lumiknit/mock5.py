@@ -7,4 +7,4 @@ all: gen.cpp
 	$(CC) -O2 $(FLAGS) -o gen gen.cpp
 
 run:
-	./gen out 1 11 11 0.01
+	./gen out 100 11 11 0.01
