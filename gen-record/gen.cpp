@@ -114,7 +114,7 @@ void printState(State *S) {
   }
   */
   char buf[24];
-  int z = fgets(buf, 24, stdin);
+  const char *_r = fgets(buf, 24, stdin);
 }
 
 int getNext(State *S) {
