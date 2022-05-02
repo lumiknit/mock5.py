@@ -933,7 +933,11 @@ class Mock5:
       plt.gcf().gca().add_patch(
           plt.Circle(
             (x, y), 0.46, zorder=2.0,
-            color='black', fill=(i % 2 == 0)))
+            color=colors[i % 2], fill=True))
+      plt.gcf().gca().add_patch(
+          plt.Circle(
+            (x, y), 0.46, zorder=2.0,
+            color='black', fill=False))
       plt.text(
           x, y, lbl, zorder=3.0,
           ha='center', va='center', fontdict=fnt)
