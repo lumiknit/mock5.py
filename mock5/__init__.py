@@ -800,6 +800,32 @@ class Mock5:
         n = n.view(self.width, self.height)
       return n
 
+  def tensors_with_a_stone(
+      self, player=None, one_hot_encoding=True, rank=None, dtype=None):
+    """ torch.tensor conversion with placing a stone to each place
+
+    Convert self into an array of torch.tensor.
+    See `.tensor()` for more information about arguments and returns
+
+    Returns:
+      list(int): indices where stone is placed. (Not (row, col), but index)
+      torch.tensor: See `.tensor()`
+    """
+    import torch
+    if player is None: player = self.player
+    Xs = []
+    idxs = []
+    for i in range(self.height * self.width):
+      if self.place_stone_at_index(i):
+        idxs.append(i)
+        Xs.append(self.tensor(
+          player=player, one_hot_encoding=one_hot_encoding,
+          rank=rank, dtype=dtype
+        ))
+        self.undo()
+    X = torch.stack(Xs)
+    return idxs, X
+
   # Empty-or-not array
 
   def empty_array(self, empty=True, non_empty=False):
@@ -878,6 +904,39 @@ class Mock5:
     if rank == 2:
       return tensor.view(self.height, self.width)
     return tensor
+
+  # Plot
+  def plot(self):
+    """ Plotting with matplotlib
+    
+    Plotting with matplotlib.
+    To display, use `plt.show()` after calling it,
+    to save as a file, use `plt.savefig(...)` after calling it.
+    """
+    import matplotlib.pyplot as plt
+    fonts = [
+      {'weight': 'bold', 'size': 20, 'color': 'white'},
+      {'weight': 'bold', 'size': 20, 'color': 'black'},
+    ]
+    colors = ['black', 'white']
+    plt.figure(figsize=(self.width, self.height))
+    plt.axis('off')
+    for i in range(1, self.height + 1):
+      plt.plot([1, self.width], [i, i], zorder=1.0, c = '0.5')
+    for i in range(1, self.width + 1):
+      plt.plot([i, i], [1, self.height], zorder=1.0, c = '0.5')
+    for i, p in enumerate(self.history):
+      y = self.height - p // self.width
+      x = 1 + p % self.width
+      lbl = str(i + 1)
+      fnt = fonts[i % 2]
+      plt.gcf().gca().add_patch(
+          plt.Circle(
+            (x, y), 0.46, zorder=2.0,
+            color='black', fill=(i % 2 == 0)))
+      plt.text(
+          x, y, lbl, zorder=3.0,
+          ha='center', va='center', fontdict=fnt)
 
 #-- Example
 
