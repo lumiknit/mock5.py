@@ -380,7 +380,7 @@ void runGame() {
         if(finished) {
           int v = (int) (10000.0 *
             (1 + spd_ratio * (exp(-S.n / (double) W * H) - 1)));
-          sc = v * (finished == 1 ? -1 : 1);
+          sc = v * (finished == 1 ? 1 : -1);
         }
         for(int i = 0; i < S.n; i++) {
           buf[2 + i * 2] = S.his[i];
