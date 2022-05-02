@@ -12,32 +12,34 @@ def read_bytes(filename):
   with open(filename, "rb") as f:
     return f.read()
 
-def conv_record(X, Y, w, b, index_map, color_map, sc_map):
-  left, v = 0, 0
+def conv_record(X, Y, w, b, index_map):
+  left, v, a = 0, 0, 0
   for i in range(len(b) // 8):
     i0, i1 = struct.unpack("ii", b[i * 8 : (i + 1) * 8])
     if left <= 0:
       z = [torch.ones(w, w, dtype=torch.float),
             torch.zeros(w, w, dtype=torch.float),
             torch.zeros(w, w, dtype=torch.float)]
-      bd = torch.stack(z)
+      bd_my = torch.stack(z)
+      bd_op = bd_my.clone()
+      a = [0, 1, -1][i0]
       v = 1
       left = i1
     else:
-      idx, sc = i0, sc_map(i1 / 10000.0)
+      idx, sc = i0, a
       x, y = index_map(idx // w, idx % w)
-      bd[0][y][x] = 0
-      bd[color_map(v)][y][x] = 1
-      X.append(bd.clone())
+      bd_my[0][y][x] = 0
+      bd_my[v][y][x] = 1
+      X.append(bd_my.clone())
       Y.append(torch.tensor([sc], dtype=torch.float))
+      bd_op[0][y][x] = 0
+      bd_op[3 - v][y][x] = 1
+      X.append(bd_op.clone())
+      Y.append(torch.tensor([-sc], dtype=torch.float))
       v = 3 - v
       left -= 1
       #print("--- {}-th => {}".format(i, sc))
       #print(bd)
-
-def id(x): return x
-def flip_color(x): return 3 - x
-def inv(x): return -x
 
 def make_symm(r, f, w):
   def g(y, x):
@@ -52,8 +54,7 @@ def conv_records(w, b):
   X, Y = [], []
   for f in range(2):
     for r in range(4):
-      for c, s in [(id, id), (flip_color, inv)]:
-        conv_record(X, Y, w, b, make_symm(r, f, w), c, s)
+      conv_record(X, Y, w, b, make_symm(r, f, w))
   Xs = torch.stack(X)
   Ys = torch.stack(Y)
   return Xs, Ys
