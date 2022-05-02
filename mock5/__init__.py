@@ -489,6 +489,20 @@ class Mock5:
       self.player = 3 - self.player
     return len(self.history)
 
+  def make_history_int_pair_array(self, winner=0):
+    """ Make history into Array<Int, Int>
+
+    Returns:
+      list(int, int):
+        [0]=winner, [1]=length
+        [even]=stone position, [odd]=0
+    """
+    a = [winner, len(self.history)]
+    for i in self.history:
+      a.append(i)
+      a.append(0)
+    return a
+
   # Check game finished
 
   def _scan_with_iter(self, iter):
