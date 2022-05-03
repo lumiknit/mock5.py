@@ -248,7 +248,7 @@ class Mock5:
     l = len(self.history)
     h = [0] * l
     for i in range(l):
-      r, c = self.history[i]
+      r, c = self.history[i] // self.width, self.history[i] % self.width
       if flip % 2 == 1: c = w - c
       if angle % 4 == 0: h[i] = r * self.width + c
       if angle % 4 == 1: h[i] = (w - c - 1) * self.height + r
