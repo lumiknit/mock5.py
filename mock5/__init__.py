@@ -249,11 +249,13 @@ class Mock5:
     h = [0] * l
     for i in range(l):
       r, c = self.history[i] // self.width, self.history[i] % self.width
-      if flip % 2 == 1: c = w - c
+      mw = self.width - 1
+      mh = self.height - 1
+      if flip % 2 == 1: c = mw - c
       if angle % 4 == 0: h[i] = r * self.width + c
-      if angle % 4 == 1: h[i] = (w - c - 1) * self.height + r
-      elif angle % 4 == 2: h[i] = (h - r - 1) * self.width + (w - c - 1)
-      elif angle % 4 == 3: h[i] = c * self.height + (h - r - 1)
+      if angle % 4 == 1: h[i] = (mw - c) * self.height + r
+      elif angle % 4 == 2: h[i] = (mh - r) * self.width + (mw - c)
+      elif angle % 4 == 3: h[i] = c * self.height + (mh - r)
     if angle % 2 == 1:
       return self.__class__(self.width, self.height, history=h)
     else:
