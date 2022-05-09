@@ -651,7 +651,9 @@ class Mock5:
       if ret is None: r, c = False, 0
       else: r, c = ret
       if (r is None) or (r is False):
-        if c == 1: self.undo()
+        if c == 1:
+          self.undo()
+          self.undo()
         elif c == 0:
           if print_messages:
             print("{} give up!".format(player_name(self.player)))
