@@ -38,6 +38,7 @@ def policy(game):
   for i in range(game.height * game.width):
     scores[i] = score_at(game, a, i)
   return scores
+policy.name = "greedy"
 
 def agent(game):
   a = Analysis(game)
