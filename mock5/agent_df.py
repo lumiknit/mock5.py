@@ -59,10 +59,10 @@ def policy(game):
     r, c = i // game.width, i % game.width
     for dr in range(-lh, lh + 1):
       xr = r + dr
-      if 0 <= xr and xr <= game.height:
+      if 0 <= xr and xr < game.height:
         for dc in range(-lh, lh + 1):
           xc = c + dc
-          if 0 <= xc and xc <= game.width:
+          if 0 <= xc and xc < game.width:
             a[xr * game.width + xc] = 1
     return a
   mz = [np.zeros(sz) for i in range(7)]
